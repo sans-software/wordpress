@@ -1,0 +1,20 @@
+apiVersion: backstage.io/v1alpha1
+kind: Component
+metadata:
+  name: "wordpress"
+  links:
+    - url: https://pr3-xpl3hstch8lkiruls3lufv4ea34u4oqh.tugboat.qa/
+      title: Preview
+      icon: dashboard
+    - url: https://dashboard.tugboat.qa/61afe932b5f1e234d51be854
+      title: Tug Boat
+      icon: binoculars
+  description: "pordpress"
+  annotations:
+    github.com/project-slug: sans-software/swordpress
+    backstage.io/techdocs-ref: dir:.
+    sonarqube.org/project-key: sans-software_wordpress
+spec:
+  type: website
+  lifecycle: production
+  owner: "ssa"

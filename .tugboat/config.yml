@@ -51,6 +51,14 @@ services:
             clone:
               -  wp --allow-root --path="${DOCROOT}" search-replace "${TUGBOAT_BASE_PREVIEW_URL_HOST}" "${TUGBOAT_SERVICE_URL_HOST}" --skip-columns=guid
 
+        lighthouse:
+            config:
+                extends: lighthouse:default
+                settings:
+                    onlyAudits:
+                        - first-meaningful-paint
+                        - speed-index
+                        - interactive
         urls:
             - /
             - /about/
