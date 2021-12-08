@@ -1,93 +1,68 @@
 services:
-  # What to call the service hosting the site.
-  php:
-    # Use PHP 7.x with Apache to serve the WordPress site; this syntax pulls in the latest version of PHP 7
-    image: tugboatqa/php:7-apache
+    php:
+        default: true
+        image: tugboatqa/php:7.3-apache
+        depends: mysql
+        commands:
+            init:
 
-    # Set this as the default service. This does a few things
-    #   1. Clones the git repository into the service container
-    #   2. Exposes port 80 to the Tugboat HTTP proxy
-    #   3. Routes requests to the preview URL to this service
-    default: true
+                # Install prerequisite packages
+                - apt-get update
+                - apt-get install -y rsync
 
-    # Wait until the mysql service is done building
-    depends: mysql
+                # Turn on URL rewriting.
+                - a2enmod rewrite
 
-    # A set of commands to run while building this service
-    commands:
-      # Commands that set up the basic preview infrastructure
-      init:
-        # Install prerequisite packages
-        - apt-get update
-        - apt-get install -y rsync libzip-dev
+                # Install PHP mysqli extension
+                - docker-php-ext-install mysqli
 
-        # Enable extra apache modules.
-        - a2enmod rewrite headers
+                # Install wp-cli
+                - curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
+                - chmod +x wp-cli.phar
+                - mv wp-cli.phar /usr/local/bin/wp
 
-        # Install the PHP extensions
-        - docker-php-ext-install mysqli exif zip
-        # Install imagick
-        - apt-get install -y libmagickwand-dev
-        - pecl install imagick-beta -y
-        - docker-php-ext-enable imagick
+                # Link the docroot
+                - ln -snf "${TUGBOAT_ROOT}/docroot" "${DOCROOT}"
 
-        # Install wp-cli
-        - curl -O https://raw.githubusercontent.com/wp-cli/builds/gh-pages/phar/wp-cli.phar
-        - chmod +x wp-cli.phar
-        - mv wp-cli.phar /usr/local/bin/wp
+                # Configure wordpress to work with tugboat
+                - wp --allow-root --path="${DOCROOT}" config create --dbhost=mysql --dbname=tugboat --dbuser=tugboat --dbpass=tugboat --force
 
-        # Use the tugboat-specific wp-config.local.php
-        - cp "${TUGBOAT_ROOT}/.tugboat/wp-config.local.php" "${DOCROOT}/"
+                # Update permalinks to remove the index.php.
+                - wp --allow-root --path="${DOCROOT}" option set permalink_structure /%postname%/
+                - wp --allow-root --path="${DOCROOT}" rewrite flush --hard
 
-        # Link the document root to the expected path. This example links /web
-        # to the docroot
-        - ln -snf "${TUGBOAT_ROOT}/web" "${DOCROOT}"
+            update:
 
-      # Commands that import files, databases, or other assets. When an
-      # existing preview is refreshed, the build workflow starts here,
-      # skipping the init step, because the results of that step will
-      # already be present.
-      update:
-        # Copy the uploads directory from an external server. The public
-        # SSH key found in the Tugboat Repository configuration must be
-        # copied to the external server in order to use rsync over SSH.
-        - mkdir -p "${DOCROOT}/wp-content/uploads" || /bin/true
-        - rsync -av --delete user@example.com:/path/to/wp-content/uploads/ "${DOCROOT}/wp-content/uploads/"
-        - chgrp -R www-data "${DOCROOT}/wp-content/uploads"
-        - find "${DOCROOT}/wp-content/uploads" -type d -exec chmod 2775 {} \;
-        - find "${DOCROOT}/wp-content/uploads" -type f -exec chmod 0664 {} \;
+                # Import uploads
+                - tar -C /tmp -zxf uploads.tar.gz
+                - rsync -av --delete /tmp/uploads/ "${TUGBOAT_ROOT}/docroot/wp-content/uploads/"
 
-        # Cleanup
-        - apt-get clean
-        - rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
+                # Cleanup
+                - apt-get clean
+                - rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/*
 
-      # Commands that build the site. When a Preview is built from a
-      # Base Preview, the build workflow starts here, skipping the init
-      # and update steps, because the results of those are inherited
-      # from the base preview.
-      build: |
-        if [ "x${TUGBOAT_BASE_PREVIEW}" != "x" ]; then
-            wp --allow-root --path="${DOCROOT}" search-replace "${TUGBOAT_BASE_PREVIEW_URL_HOST}" "${TUGBOAT_SERVICE_URL_HOST}" --skip-columns=guid
-        else
-            wp --allow-root --path="${DOCROOT}" search-replace 'wordpress.local' "${TUGBOAT_SERVICE_URL_HOST}" --skip-columns=guid
-        fi
+            build: |
+                if [ "x${TUGBOAT_BASE_PREVIEW}" != "x" ]; then
+                    wp --allow-root --path="${DOCROOT}" search-replace "${TUGBOAT_BASE_PREVIEW_URL_HOST}" "${TUGBOAT_SERVICE_URL_HOST}" --skip-columns=guid
+                else
+                    wp --allow-root --path="${DOCROOT}" search-replace 'main-hbpfbyk632i25rgdo9caeoo9oxs4mrtd.tugboat.qa' "${TUGBOAT_SERVICE_URL_HOST}" --skip-columns=guid
+                fi
 
-  # What to call the service hosting MySQL. This name also acts as the
-  # hostname to access the service by from the php service.
-  mysql:
-    # Use the latest available 5.x version of MySQL
-    image: tugboatqa/mysql:5
+            clone:
+              -  wp --allow-root --path="${DOCROOT}" search-replace "${TUGBOAT_BASE_PREVIEW_URL_HOST}" "${TUGBOAT_SERVICE_URL_HOST}" --skip-columns=guid
 
-    # A set of commands to run while building this service
-    commands:
-      # Commands that import files, databases, or other assets. When an
-      # existing preview is refreshed, the build workflow starts here,
-      # skipping the init step, because the results of that step will
-      # already be present.
-      update:
-        # Copy a database dump from an external server. The public
-        # SSH key found in the Tugboat Repository configuration must be
-        # copied to the external server in order to use scp.
-        - scp user@example.com:database.sql.gz /tmp/database.sql.gz
-        - zcat /tmp/database.sql.gz | mysql tugboat
-        - rm /tmp/database.sql.gz
+        urls:
+            - /
+            - /about/
+            - /contact/
+            - /tugboat-engines-typically-produce-680-to-3400-hp/
+
+        visualdiff:
+            threshold: 90
+
+    mysql:
+        image: tugboatqa/mysql:5
+        checkout: true
+        commands:
+            update:
+                - zcat database.sql.gz | mysql tugboat
