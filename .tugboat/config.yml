@@ -55,10 +55,10 @@ services:
             config:
                 extends: lighthouse:default
                 settings:
-                onlyAudits:
-                    - first-meaningful-paint
-                    - speed-index
-                    - interactive
+                    onlyAudits:
+                        - first-meaningful-paint
+                        - speed-index
+                        - interactive
         urls:
             - /
             - /about/
