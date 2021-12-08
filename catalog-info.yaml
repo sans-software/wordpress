@@ -3,7 +3,7 @@ kind: Component
 metadata:
   name: "wordpress"
   links:
-    - url: https://pr2-u0l8s2xy4v4gwa6uusvhiaugsgibjo2q.tugboat.qa/
+    - url: https://pr3-xpl3hstch8lkiruls3lufv4ea34u4oqh.tugboat.qa/
       title: Preview
       icon: dashboard
     - url: https://dashboard.tugboat.qa/61afe932b5f1e234d51be854
