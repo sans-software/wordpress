@@ -3,7 +3,7 @@ site_description: Default Wordpress with Tugboat.
 
 nav:
   - Tugboat: README.md
-  - Wordpress: ./docroot/README.md
+  - Wordpress: /docroot/README.md
 
 plugins:
   - techdocs-core
