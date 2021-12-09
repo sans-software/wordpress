@@ -1,0 +1,8 @@
+site_name: wordpress
+site_description: Default Wordpress with Tugboat.
+
+nav:
+  - Introduction: README.md
+
+plugins:
+  - techdocs-core
