@@ -9,9 +9,9 @@ metadata:
     - url: https://dashboard.tugboat.qa/61afe932b5f1e234d51be854
       title: Tug Boat
       icon: binoculars
-  description: "pordpress"
+  description: "wordpress demo site"
   annotations:
-    github.com/project-slug: sans-software/swordpress
+    github.com/project-slug: sans-software/wordpress
     backstage.io/techdocs-ref: dir:.
     sonarqube.org/project-key: sans-software_wordpress
 spec:
