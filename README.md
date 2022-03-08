@@ -5,17 +5,8 @@ A WordPress site configured to work with [Tugboat](https:/www.tugboat.qa).
 
 Neat!
 
-@startuml
-Bob ->x Alice
-Bob -> Alice
-Bob ->> Alice
-Bob -\ Alice
-Bob \\- Alice
-Bob //-- Alice
 
-Bob ->o Alice
-Bob o\\-- Alice
-
-Bob <-> Alice
-Bob <->o Alice
-@enduml
+```plantuml format="png" classes="uml myDiagram" alt="My super diagram placeholder" title="My super diagram" width="300px" height="300px"
+  Goofy ->  MickeyMouse: calls
+  Goofy <-- MickeyMouse: responds
+```
